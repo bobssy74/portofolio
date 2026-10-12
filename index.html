@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Portofolio & Jurnal Perkembangan Diri</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={theme:{extend:{fontFamily:{sans:['"Plus Jakarta Sans"','system-ui','sans-serif']}}}}</script>
+<style>
+.edit-only{display:none!important}
+body.edit .edit-only{display:inline-flex!important}
+body.edit div.edit-only{display:block!important}
+.modal{opacity:0;pointer-events:none;transition:opacity .2s}
+.modal.open{opacity:1;pointer-events:auto}
+.modal .panel{transform:translateY(12px) scale(.98);transition:transform .2s}
+.modal.open .panel{transform:none}
+.inp{width:100%;border:1px solid #cbd5e1;border-radius:.75rem;padding:.55rem .8rem;font-size:.875rem;background:#fff}
+.inp:focus{outline:2px solid #6366f1;border-color:transparent}
+.lbl{display:block;font-size:.8rem;font-weight:600;color:#334155;margin-bottom:.25rem}
+:focus-visible{outline:2px solid #6366f1;outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased">
+
+<!-- HEADER -->
+<header class="sticky top-0 z-30 bg-slate-900/95 backdrop-blur text-white">
+  <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center gap-3">
+    <a href="#top" class="font-extrabold tracking-tight text-lg mr-auto">Jejak<span class="text-violet-400">Tumbuh</span></a>
+    <nav class="hidden sm:flex gap-5 text-sm text-slate-300">
+      <a href="#pencapaian" class="hover:text-white">Pencapaian</a>
+      <a href="#timeline" class="hover:text-white">Timeline</a>
+    </nav>
+    <div class="edit-only flex-wrap items-center gap-2 text-xs">
+      <button id="btnExport" class="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600">Export Data (JSON)</button>
+      <label class="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 cursor-pointer">Import Data (JSON)<input id="fileImport" type="file" accept=".json,application/json" class="hidden"></label>
+      <button id="btnReset" class="px-3 py-1.5 rounded-lg bg-rose-600/80 hover:bg-rose-600">Reset ke Data Default</button>
+    </div>
+    <label class="flex items-center gap-2 cursor-pointer select-none text-sm">
+      <span>Mode Edit (CMS)</span>
+      <input id="editToggle" type="checkbox" class="sr-only peer">
+      <span class="w-11 h-6 rounded-full bg-slate-600 peer-checked:bg-violet-500 relative transition after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:w-5 after:h-5 after:rounded-full after:bg-white after:transition peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-white"></span>
+    </label>
+  </div>
+</header>
+
+<main id="top" class="max-w-6xl mx-auto px-4 pb-20">
+  <!-- PROFIL -->
+  <section class="mt-8 rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-900 to-violet-800 text-white p-6 sm:p-10 flex flex-col sm:flex-row gap-6 sm:gap-10 items-center sm:items-start">
+    <div id="avatar" class="shrink-0"></div>
+    <div class="text-center sm:text-left flex-1 min-w-0">
+      <h1 id="pName" class="text-3xl sm:text-4xl font-extrabold tracking-tight"></h1>
+      <p id="pRole" class="mt-1 text-violet-200 font-semibold"></p>
+      <p id="pBio" class="mt-4 text-slate-200 leading-relaxed max-w-2xl"></p>
+      <div id="pLinks" class="mt-5 flex flex-wrap justify-center sm:justify-start gap-2 text-sm"></div>
+      <button id="btnEditProfile" class="edit-only mt-5 items-center gap-2 px-4 py-2 rounded-xl bg-white text-slate-900 text-sm font-semibold hover:bg-violet-100">✏️ Edit Profil</button>
+    </div>
+    <div id="stats" class="grid grid-cols-3 sm:grid-cols-1 gap-3 text-center sm:min-w-[120px]"></div>
+  </section>
+
+  <!-- PENCAPAIAN -->
+  <section id="pencapaian" class="mt-12 scroll-mt-20">
+    <div class="flex flex-wrap items-end gap-3 justify-between">
+      <h2 class="text-2xl font-extrabold tracking-tight">Pencapaian</h2>
+      <button data-add="ach" class="edit-only items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700">＋ Tambah Pencapaian Baru</button>
+    </div>
+    <div class="mt-4 flex flex-col md:flex-row gap-3 md:items-center">
+      <div id="tabs" class="flex gap-2 overflow-x-auto"></div>
+      <input id="search" type="search" placeholder="Cari judul atau deskripsi…" class="inp md:ml-auto md:max-w-xs">
+    </div>
+    <div id="achGrid" class="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3"></div>
+  </section>
+
+  <!-- TIMELINE -->
+  <section id="timeline" class="mt-16 scroll-mt-20">
+    <div class="flex flex-wrap items-end gap-3 justify-between">
+      <div>
+        <h2 class="text-2xl font-extrabold tracking-tight">Timeline Perkembangan Diri</h2>
+        <p class="text-sm text-slate-500 mt-1">Riwayat perkembangan dari yang paling awal hingga terbaru.</p>
+      </div>
+      <button data-add="tl" class="edit-only items-center gap-2 px-4 py-2 rounded-xl bg-violet-600 text-white text-sm font-semibold hover:bg-violet-700">＋ Tambah Milestone</button>
+    </div>
+    <ol id="tlList" class="mt-8 relative border-l-2 border-indigo-200 ml-3 space-y-8"></ol>
+  </section>
+</main>
+
+<footer class="text-center text-xs text-slate-400 pb-8">Data tersimpan otomatis di browser Anda (LocalStorage). Gunakan Export untuk backup.</footer>
+
+<!-- MODAL PROFIL -->
+<div id="mProfile" class="modal fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+  <form id="fProfile" class="panel bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[92vh] overflow-y-auto p-6 space-y-3">
+    <h3 class="text-lg font-extrabold">Edit Profil</h3>
+    <div><label class="lbl">Nama</label><input name="name" required class="inp"></div>
+    <div><label class="lbl">Gelar / Peran</label><input name="role" class="inp"></div>
+    <div><label class="lbl">Bio singkat</label><textarea name="bio" rows="3" class="inp"></textarea></div>
+    <div class="grid sm:grid-cols-2 gap-3">
+      <div><label class="lbl">Email</label><input name="email" type="email" class="inp"></div>
+      <div><label class="lbl">LinkedIn (URL)</label><input name="linkedin" class="inp"></div>
+    </div>
+    <div><label class="lbl">GitHub / Instagram (URL)</label><input name="github" class="inp"></div>
+    <div class="img-field" data-key="photo">
+      <label class="lbl">Foto profil</label>
+      <input type="file" accept="image/*" class="file text-sm block w-full mb-2">
+      <input type="text" placeholder="atau tempel URL gambar" class="url inp">
+      <img class="prev hidden mt-2 h-24 rounded-xl object-cover" alt="Pratinjau">
+    </div>
+    <div class="flex justify-end gap-2 pt-2">
+      <button type="button" data-close class="px-4 py-2 rounded-xl bg-slate-100 text-sm font-semibold">Batal</button>
+      <button class="px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-semibold">Simpan profil</button>
+    </div>
+  </form>
+</div>
+
+<!-- MODAL ITEM -->
+<div id="mItem" class="modal fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+  <form id="fItem" class="panel bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[92vh] overflow-y-auto p-6 space-y-3">
+    <h3 id="itemTitle" class="text-lg font-extrabold"></h3>
+    <input type="hidden" name="id"><input type="hidden" name="type">
+    <div><label class="lbl">Judul</label><input name="title" required class="inp"></div>
+    <div class="grid sm:grid-cols-2 gap-3">
+      <div><label class="lbl">Kategori</label>
+        <select name="category" class="inp"><option>Akademik</option><option>Non-Akademik</option></select></div>
+      <div><label class="lbl">Sub-kategori / Tag</label><input name="tag" list="tags" placeholder="mis. Sertifikasi" class="inp">
+        <datalist id="tags"><option>IPK</option><option>Beasiswa</option><option>Publikasi Ilmiah</option><option>Sertifikasi</option><option>Lomba</option><option>Organisasi</option><option>Voluntari</option><option>Olahraga</option><option>Seni</option><option>Proyek Pribadi</option></datalist></div>
+    </div>
+    <div><label class="lbl">Tanggal</label><input name="date" type="date" required class="inp"></div>
+    <div><label class="lbl">Deskripsi</label><textarea name="desc" rows="4" class="inp"></textarea></div>
+    <div class="img-field" data-key="img">
+      <label class="lbl">Gambar dokumentasi</label>
+      <input type="file" accept="image/*" class="file text-sm block w-full mb-2">
+      <input type="text" placeholder="atau tempel URL gambar" class="url inp">
+      <img class="prev hidden mt-2 h-24 rounded-xl object-cover" alt="Pratinjau">
+    </div>
+    <div id="linkWrap"><label class="lbl">Link bukti / sertifikat (opsional)</label><input name="link" placeholder="https://…" class="inp"></div>
+    <div class="flex justify-end gap-2 pt-2">
+      <button type="button" data-close class="px-4 py-2 rounded-xl bg-slate-100 text-sm font-semibold">Batal</button>
+      <button class="px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-semibold">Simpan</button>
+    </div>
+  </form>
+</div>
+
+<div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white text-sm px-4 py-2 rounded-xl shadow-lg opacity-0 pointer-events-none transition-opacity"></div>
+
+<script>
+const KEY='growth-tracker-v1';
+const DEFAULT={
+  profile:{name:'Nama Anda',role:'Mahasiswa Teknik Informatika · Pengembang Web',bio:'Saya senang membangun hal-hal yang berguna, belajar secara konsisten, dan mencatat setiap langkah kecil yang membawa saya lebih jauh. Halaman ini adalah jejak perjalanan akademik dan non-akademik saya.',email:'nama@email.com',linkedin:'https://linkedin.com/in/namaanda',github:'https://github.com/namaanda',photo:''},
+  achievements:[
+    {id:'a1',title:'IPK 3,82 — Lulus Cum Laude',category:'Akademik',tag:'IPK',date:'2025-08-20',desc:'Menyelesaikan studi D4 dengan predikat cum laude. Skripsi membahas sistem monitoring jaringan berbasis web dengan pengujian di lingkungan nyata.',img:'',link:''},
+    {id:'a2',title:'Beasiswa Prestasi Akademik',category:'Akademik',tag:'Beasiswa',date:'2023-09-01',desc:'Penerima beasiswa prestasi selama dua semester berturut-turut berkat konsistensi nilai dan keaktifan di kelas.',img:'',link:''},
+    {id:'a3',title:'Sertifikasi Dasar Jaringan (CCNA)',category:'Akademik',tag:'Sertifikasi',date:'2024-03-12',desc:'Lulus ujian sertifikasi jaringan dengan fokus pada routing, switching, dan keamanan dasar.',img:'',link:'https://example.com/sertifikat'},
+    {id:'a4',title:'Juara 2 Lomba Karya Tulis Ilmiah',category:'Akademik',tag:'Lomba',date:'2024-10-05',desc:'Meraih juara 2 tingkat regional dengan tulisan tentang pemanfaatan data terbuka untuk layanan publik.',img:'',link:''},
+    {id:'a5',title:'Ketua Divisi Media — Himpunan Mahasiswa',category:'Non-Akademik',tag:'Organisasi',date:'2023-01-15',desc:'Memimpin tim 8 orang mengelola publikasi kegiatan dan merapikan arsip dokumentasi himpunan.',img:'',link:''},
+    {id:'a6',title:'Relawan Kelas Literasi Digital',category:'Non-Akademik',tag:'Voluntari',date:'2024-06-22',desc:'Mengajar dasar penggunaan komputer dan internet aman untuk warga di lingkungan sekitar kampus.',img:'',link:''},
+    {id:'a7',title:'Aplikasi Pencatat Keuangan Pribadi',category:'Non-Akademik',tag:'Proyek Pribadi',date:'2025-02-10',desc:'Membangun aplikasi web sederhana untuk mencatat pemasukan dan pengeluaran, sepenuhnya berjalan di browser.',img:'',link:'https://github.com/namaanda'}
+  ],
+  timeline:[
+    {id:'t1',title:'Mulai kuliah',date:'2021-09-01',category:'Akademik',desc:'Memasuki dunia kampus dan mulai belajar pemrograman dari nol.',img:''},
+    {id:'t2',title:'Bergabung dengan himpunan mahasiswa',date:'2022-03-10',category:'Non-Akademik',desc:'Belajar bekerja dalam tim dan mengatur waktu di antara kuliah dan organisasi.',img:''},
+    {id:'t3',title:'Proyek web pertama selesai',date:'2023-05-18',category:'Non-Akademik',desc:'Merilis situs kecil pertama yang dipakai orang lain.',img:''},
+    {id:'t4',title:'Lulus sertifikasi jaringan',date:'2024-03-12',category:'Akademik',desc:'Membuktikan kemampuan teknis lewat ujian resmi.',img:''},
+    {id:'t5',title:'Lulus dan mulai mencari karier',date:'2025-08-20',category:'Akademik',desc:'Menutup masa studi dan mulai melamar posisi yang sesuai minat.',img:''}
+  ]
+};
+let state=load(), filter='Semua', q='';
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const safeUrl=u=>/^(https?:|mailto:|data:image\/)/i.test(u||'')?u:'';
+const fmt=d=>{const x=new Date(d);return isNaN(x)?'':x.toLocaleDateString('id-ID',{year:'numeric',month:'long',day:'numeric'})};
+const badge=c=>c==='Akademik'?'bg-blue-100 text-blue-700':'bg-emerald-100 text-emerald-700';
+const grad=c=>c==='Akademik'?'from-blue-500 to-indigo-600':'from-emerald-500 to-violet-600';
+
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.profile)return s}catch(e){}return structuredClone(DEFAULT)}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){toast('Penyimpanan penuh. Gunakan gambar lebih kecil atau Export data.')}}
+function toast(m){const t=$('#toast');t.textContent=m;t.style.opacity=1;clearTimeout(t._h);t._h=setTimeout(()=>t.style.opacity=0,2600)}
+const uid=()=>'i'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+
+/* ---------- RENDER ---------- */
+function render(){renderProfile();renderTabs();renderAch();renderTimeline()}
+function renderProfile(){
+  const p=state.profile;
+  $('#pName').textContent=p.name;$('#pRole').textContent=p.role;$('#pBio').textContent=p.bio;
+  const ini=(p.name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  $('#avatar').innerHTML=safeUrl(p.photo)?`<img src="${esc(p.photo)}" alt="Foto ${esc(p.name)}" class="w-32 h-32 sm:w-40 sm:h-40 rounded-3xl object-cover ring-4 ring-white/20">`:`<div class="w-32 h-32 sm:w-40 sm:h-40 rounded-3xl bg-white/10 ring-4 ring-white/20 grid place-items-center text-4xl font-extrabold">${esc(ini)}</div>`;
+  const L=[[p.email&&'mailto:'+p.email,'Email'],[p.linkedin,'LinkedIn'],[p.github,'GitHub / IG']].filter(x=>x[0]&&safeUrl(x[0]));
+  $('#pLinks').innerHTML=L.map(([u,t])=>`<a href="${esc(u)}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20">${t}</a>`).join('');
+  const n=c=>state.achievements.filter(a=>a.category===c).length;
+  $('#stats').innerHTML=[['Akademik',n('Akademik')],['Non-Akademik',n('Non-Akademik')],['Milestone',state.timeline.length]].map(([l,v])=>`<div class="rounded-2xl bg-white/10 px-3 py-2"><div class="text-2xl font-extrabold">${v}</div><div class="text-xs text-slate-300">${l}</div></div>`).join('');
+}
+function renderTabs(){
+  $('#tabs').innerHTML=['Semua','Akademik','Non-Akademik'].map(t=>`<button data-tab="${t}" class="px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap ${t===filter?'bg-indigo-600 text-white':'bg-white border border-slate-200 text-slate-600 hover:border-indigo-300'}">${t}</button>`).join('');
+}
+const match=i=>(`${i.title} ${i.desc} ${i.tag||''}`).toLowerCase().includes(q);
+function actions(type,id){return `<div class="edit-only gap-1"><button data-edit="${type}:${id}" title="Edit" aria-label="Edit" class="w-8 h-8 grid place-items-center rounded-lg bg-slate-100 hover:bg-indigo-100">✏️</button><button data-del="${type}:${id}" title="Hapus" aria-label="Hapus" class="w-8 h-8 grid place-items-center rounded-lg bg-slate-100 hover:bg-rose-100">🗑️</button></div>`}
+function media(i,h){return safeUrl(i.img)?`<img src="${esc(i.img)}" alt="${esc(i.title)}" loading="lazy" class="w-full ${h} object-cover">`:`<div class="w-full ${h} bg-gradient-to-br ${grad(i.category)} grid place-items-center text-white/90 text-3xl font-extrabold">${esc((i.tag||i.category)[0])}</div>`}
+function renderAch(){
+  const list=state.achievements.filter(a=>(filter==='Semua'||a.category===filter)&&match(a)).sort((a,b)=>b.date.localeCompare(a.date));
+  $('#achGrid').innerHTML=list.length?list.map(a=>`
+  <article class="group bg-white rounded-2xl border border-slate-200 overflow-hidden flex flex-col hover:shadow-xl hover:-translate-y-1 transition">
+    ${media(a,'h-40')}
+    <div class="p-5 flex flex-col gap-2 flex-1">
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="text-xs font-semibold px-2.5 py-1 rounded-full ${badge(a.category)}">${esc(a.category)}</span>
+        ${a.tag?`<span class="text-xs px-2.5 py-1 rounded-full bg-violet-100 text-violet-700 font-semibold">${esc(a.tag)}</span>`:''}
+        <span class="ml-auto">${actions('ach',a.id)}</span>
+      </div>
+      <h3 class="font-bold text-lg leading-snug">${esc(a.title)}</h3>
+      <p class="text-xs text-slate-500">${fmt(a.date)}</p>
+      <p class="text-sm text-slate-600 leading-relaxed">${esc(a.desc)}</p>
+      ${safeUrl(a.link)?`<a href="${esc(a.link)}" target="_blank" rel="noopener" class="mt-auto pt-2 text-sm font-semibold text-indigo-600 hover:underline">Lihat bukti / sertifikat</a>`:''}
+    </div>
+  </article>`).join(''):`<p class="col-span-full text-center text-slate-500 py-12">Belum ada pencapaian yang cocok. Ubah kata kunci atau filter${document.body.classList.contains('edit')?', atau tambahkan pencapaian baru':''}.</p>`;
+}
+function renderTimeline(){
+  const list=state.timeline.filter(match).sort((a,b)=>a.date.localeCompare(b.date));
+  $('#tlList').innerHTML=list.length?list.map(t=>`
+  <li class="ml-6 relative">
+    <span class="absolute -left-[2.15rem] top-1.5 w-4 h-4 rounded-full ring-4 ring-slate-50 ${t.category==='Akademik'?'bg-blue-500':'bg-emerald-500'}"></span>
+    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden sm:flex hover:shadow-lg transition">
+      ${safeUrl(t.img)?`<img src="${esc(t.img)}" alt="${esc(t.title)}" loading="lazy" class="w-full sm:w-44 h-40 sm:h-auto object-cover">`:''}
+      <div class="p-5 flex-1">
+        <div class="flex items-center gap-2 flex-wrap">
+          <time class="text-xs text-slate-500">${fmt(t.date)}</time>
+          <span class="text-xs font-semibold px-2.5 py-1 rounded-full ${badge(t.category)}">${esc(t.category)}</span>
+          <span class="ml-auto">${actions('tl',t.id)}</span>
+        </div>
+        <h3 class="mt-2 font-bold text-lg">${esc(t.title)}</h3>
+        <p class="mt-1 text-sm text-slate-600 leading-relaxed">${esc(t.desc)}</p>
+      </div>
+    </div>
+  </li>`).join(''):`<li class="ml-6 text-slate-500">Belum ada milestone yang cocok.</li>`;
+}
+
+/* ---------- MODAL ---------- */
+const open=m=>$(m).classList.add('open'), closeAll=()=>$$('.modal').forEach(m=>m.classList.remove('open'));
+document.addEventListener('click',e=>{if(e.target.closest('[data-close]')||e.target.classList.contains('modal'))closeAll()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeAll()});
+
+/* gambar: file -> Base64 (diperkecil) atau URL */
+function shrink(file,max=900){return new Promise((res,rej)=>{const r=new FileReader();r.onerror=rej;r.onload=()=>{const im=new Image();im.onerror=rej;im.onload=()=>{const k=Math.min(1,max/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.82))};im.src=r.result};r.readAsDataURL(file)})}
+$$('.img-field').forEach(f=>{
+  const file=f.querySelector('.file'),url=f.querySelector('.url'),prev=f.querySelector('.prev');
+  const show=v=>{f.dataset.val=v||'';prev.src=v||'';prev.classList.toggle('hidden',!v)};
+  f.set=show;
+  file.onchange=async()=>{if(file.files[0]){try{show(await shrink(file.files[0]));url.value=''}catch(e){toast('Gambar tidak dapat dibaca.')}}};
+  url.oninput=()=>show(url.value.trim());
+});
+function setImg(form,v){const f=form.querySelector('.img-field');f.querySelector('.file').value='';f.querySelector('.url').value=(v||'').startsWith('data:')?'':(v||'');f.set(v)}
+
+/* profil */
+$('#btnEditProfile').onclick=()=>{const f=$('#fProfile');for(const k of ['name','role','bio','email','linkedin','github'])f[k].value=state.profile[k]||'';setImg(f,state.profile.photo);open('#mProfile')};
+$('#fProfile').onsubmit=e=>{e.preventDefault();const f=e.target;for(const k of ['name','role','bio','email','linkedin','github'])state.profile[k]=f[k].value.trim();state.profile.photo=f.querySelector('.img-field').dataset.val||'';save();render();closeAll();toast('Profil disimpan')};
+
+/* item pencapaian / timeline */
+function openItem(type,id){
+  const f=$('#fItem'),it=id?(type==='ach'?state.achievements:state.timeline).find(x=>x.id===id):null;
+  f.reset();f.type.value=type;f.id.value=id||'';
+  $('#itemTitle').textContent=(it?'Edit ':'Tambah ')+(type==='ach'?'Pencapaian':'Milestone');
+  $('#linkWrap').classList.toggle('hidden',type!=='ach');
+  f.querySelector('[name=tag]').closest('div').classList.toggle('hidden',type!=='ach');
+  if(it){for(const k of ['title','category','tag','date','desc','link'])if(f[k])f[k].value=it[k]||''}else f.date.value=new Date().toISOString().slice(0,10);
+  setImg(f,it?.img);open('#mItem');
+}
+$('#fItem').onsubmit=e=>{
+  e.preventDefault();const f=e.target,type=f.type.value,arr=type==='ach'?state.achievements:state.timeline;
+  const o={id:f.id.value||uid(),title:f.title.value.trim(),category:f.category.value,date:f.date.value,desc:f.desc.value.trim(),img:f.querySelector('.img-field').dataset.val||''};
+  if(type==='ach'){o.tag=f.tag.value.trim();o.link=f.link.value.trim()}
+  const i=arr.findIndex(x=>x.id===o.id);i>=0?arr[i]=o:arr.push(o);
+  save();render();closeAll();toast('Tersimpan');
+};
+
+/* delegasi klik: tab, tambah, edit, hapus */
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-tab],[data-add],[data-edit],[data-del]');if(!t)return;
+  if(t.dataset.tab){filter=t.dataset.tab;renderTabs();renderAch()}
+  else if(t.dataset.add)openItem(t.dataset.add);
+  else if(t.dataset.edit){const[ty,id]=t.dataset.edit.split(':');openItem(ty,id)}
+  else if(t.dataset.del){const[ty,id]=t.dataset.del.split(':');if(confirm('Hapus item ini? Tindakan tidak dapat dibatalkan.')){const k=ty==='ach'?'achievements':'timeline';state[k]=state[k].filter(x=>x.id!==id);save();render();toast('Terhapus')}}
+});
+
+/* pencarian & mode edit */
+$('#search').oninput=e=>{q=e.target.value.trim().toLowerCase();renderAch();renderTimeline()};
+$('#editToggle').onchange=e=>{document.body.classList.toggle('edit',e.target.checked);renderAch();toast(e.target.checked?'Mode Edit aktif':'Mode Pengunjung aktif')};
+
+/* export / import / reset */
+$('#btnExport').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(state,null,2)],{type:'application/json'}));a.download='portofolio-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(a.href)};
+$('#fileImport').onchange=e=>{
+  const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.profile||!Array.isArray(d.achievements)||!Array.isArray(d.timeline))throw 0;if(!confirm('Data saat ini akan diganti dengan isi file. Lanjutkan?'))return;state=d;save();render();toast('Data berhasil diimpor')}catch(x){toast('File tidak valid. Pilih file JSON hasil Export.')}e.target.value=''};
+  r.readAsText(f);
+};
+$('#btnReset').onclick=()=>{if(confirm('Kembalikan semua data ke contoh awal? Data Anda akan hilang.')){state=structuredClone(DEFAULT);save();render();toast('Data dikembalikan ke default')}};
+
+render();
+</script>
+</body>
+</html>
